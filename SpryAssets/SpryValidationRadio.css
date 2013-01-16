@@ -1,0 +1,50 @@
+@charset "UTF-8";
+
+/* SpryValidationRadio.css - version 0.1 - Spry Pre-Release 1.6.1 */
+
+/* Copyright (c) 2007. Adobe Systems Incorporated. All rights reserved. */
+
+
+/* These are the classes applied on the messages
+ * (required message and invalid value message )
+ * which prevent them from being displayed by default.
+ */
+.radioRequiredMsg, .radioInvalidMsg{
+	display: none;
+}
+
+/* These selectors change the way messages look when the widget is in one of the error states.
+ * These classes set a default red border and font color for the error text.
+ * The state class (e.g. .radioRequiredState) is applied on the top-level container for the widget, 
+ * and this way only the specific error message can be shown by setting the display property to "inline".
+ */
+.radioRequiredState .radioRequiredMsg,
+.radioInvalidState .radioInvalidMsg{
+display: inline;
+	color: #CC3333;
+	font-size:10px;
+}
+
+/* The next three group selectors control the way the core element (SELECT) looks like when the widget is in one of the states: 
+ * focus, required / invalid, valid 
+ * There are two selectors for each state, to cover the two main usecases for the widget:
+ * - the widget id is placed on the top level container for the SELECT
+ * - the widget id is placed on the SELECT element itself (there are no error messages)
+ */
+ 
+/* When the widget is in the valid state the SELECT has a green background applied on it. */
+.radioValidState radio, radio.radioValidState {
+	background-color: #B8F5B1;
+}
+
+/* When the widget is in an invalid state the SELECT has a red background applied on it. */
+radio.radioRequiredState, .radioRequiredState radio,
+radio.radioInvalidState, .radioInvalidState radio {
+	background-color: #FF9F9F;
+}
+
+/* When the widget has received focus, the SELECT has a yellow background applied on it. */
+.radioFocusState radio, radio.radioFocusState {
+	background-color: #FFFFCC;
+}
+

@@ -1,0 +1,12 @@
+<?php header('Content-type:text/html;charset=tis-620');?>
+Menu1 Content
+Menu1 Content
+Menu1 Content
+Menu1 Content
+Menu1 Content
+Menu1 Content
+Menu1 Content
+Menu1 Content
+Menu1 Content
+Menu1 Content
+<b>ข้อความของหน้า menu1.php</b>

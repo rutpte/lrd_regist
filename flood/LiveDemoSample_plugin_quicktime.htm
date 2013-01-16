@@ -1,0 +1,26 @@
+<html>
+	<TITLE>ACTi - Live Demo</TITLE>
+<body>
+	<object width="720" height="480" 
+    codebase="http://www.apple.com/qtactivex/qtplugin.cab#version=7,3,0,0" 
+    classid="clsid:02BF25D5-8C17-4B23-BC80-D3488ABDDC6B">
+
+    <param value="logo.jpg" name="src" />
+    <param value="rtsp://192.168.75.201:7070" name="qtsrc"/>
+    <param value="true" name="controller" />
+    <param value="true" name="autostart" />
+
+    <embed
+        src="logo.jpg" 
+        type="video/quicktime" 
+        width="720" 
+        height="480" 
+        qtsrc="rtsp://192.168.75.201:7070" 
+        controller="true" 
+        autostart="true" 
+        plugin="quicktimeplugin" 
+        pluginspage="http://www.apple.com/quicktime/download/" >
+    </embed>
+</object>
+</body>
+</html>

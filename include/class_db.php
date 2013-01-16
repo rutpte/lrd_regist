@@ -1,0 +1,497 @@
+<?php
+/** 
+*------------------------
+* Require configuration value for connect to data base
+* Copyright (c)2003 Jira Hi
+*------------------------
+*/
+class db {
+
+    var $conn_id;
+    var $result;
+    var $record;
+    var $db = array();
+    var $port;
+    var $query_count=0;
+	var $sql;
+	var $SID='';
+	var $typeConn;
+
+    function db() {        ////////////////// ??????????????????????????  port 5432 pg
+        global $DB,$SID;
+        $this->db = $DB;
+        if(ereg(":",$this->db['host'])) {    //ตรวจค่าว่ามี ":" อยู่ในตัวแปรใหม
+            list($host,$port) = explode(":",$this->db['host']);
+            $this->port = $port;
+        } else {
+            $this->port = 3306;
+        }
+		$this->SID = $SID;
+		$this->typeConn = 'pgsql';
+    }
+    /////////////////////////////////////////////////////////////////////////
+    function connect() {
+        
+		if ($this->typeConn=='mysql'){
+		 $this->conn_id = mysql_connect($this->db['host'].":".$this->port,$this->db['user'],$this->db['pass']);
+	mysql_query("SET NAMES 'UTF8' ");
+		}
+		///
+		else if ($this->typeConn=='mssql'){
+             $this->conn_id = mssql_connect($this->db['host'],$this->db['user'],$this->db['pass']); 
+		}
+		////
+		else if ($this->typeConn=='pgsql'){         ////add new postgress
+			// pg_connect("host=sheep port=5432 dbname=mary user=lamb password=foo");
+             $this->conn_id = pg_connect('host='.$this->db['host'].' port=5432 dbname='.$this->db['dbName'].' user='.$this->db['user'].' password='.$this->db['pass']);
+		}
+		///
+        if ($this->conn_id == 0) {
+            $this->sql_error("Connection Error");
+        }
+        ////////////////////
+      
+	if ($this->typeConn=='mysql') { 
+	 	if (!mysql_select_db($this->db['dbName'], $this->conn_id)) {
+            $this->sql_error("Database Error");
+        }
+	}else if ($this->typeConn=='mssql') {
+		if (!mssql_select_db($this->db['dbName'], $this->conn_id)) {
+            $this->sql_error("Database Error");
+        }
+	}//else if ($this->typeConn=='pgsql'){             // เพิ่ม else if ในส่วนของ database postgress
+     //if (!pg_select_db($this->db['dbName'], $this->conn_id)) {  // posgres ไม่มีการเลือก db
+            //$this->sql_error("Database Error");
+	//}// postg
+        return $this->conn_id;
+    }  //end function connect
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function query($query_string) {
+		if ($this->typeConn=='mysql') 
+            $this->result = mysql_query($query_string,$this->conn_id);
+		else if ($this->typeConn=='mssql') 
+           $this->result = mssql_query($query_string,$this->conn_id);
+      else if ($this->typeConn=='pgsql')
+           $this->result = pg_query($this->conn_id,$query_string);  // new add postgre query
+           
+		$this->sql = $query_string;
+        $this->query_count++;
+        if (!$this->result) {
+            $this->sql_error("Query Error zerokung");
+        }
+        return $this->result;
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+
+    function fetch_array($query_id) {
+        if ($this->typeConn=='mysql') 
+		    $this->record = mysql_fetch_array($query_id,MYSQL_ASSOC);
+		else  if ($this->typeConn=='mssql') 
+            $this->record = mssql_fetch_array($query_id);
+      else  if ($this->typeConn=='pgsql')               // new add postgre query
+            $this->record = pg_fetch_array($query_id);
+        return $this->record;
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////////////
+    function num_rows($query_id) {
+         if ($this->typeConn=='mysql') 
+		         return ($query_id) ? mysql_num_rows($query_id) : 0;
+		 else  if ($this->typeConn=='mssql') 
+                return ($query_id) ? mssql_num_rows($query_id) : 0;
+       else  if ($this->typeConn=='pgsql')
+                return ($query_id) ? pg_num_rows($query_id) : 0;   // new add postgre query
+    }
+
+    function num_fields($query_id) {
+		 if ($this->typeConn=='mysql') 
+                 return ($query_id) ? mysql_num_fields($query_id) : 0;
+		 else   if ($this->typeConn=='mssql') 
+                  return ($query_id) ? mssql_num_fields($query_id) : 0;
+       else   if ($this->typeConn=='pgsql')
+                  return ($query_id) ? pg_num_fields($query_id) : 0;   // new add postgre query
+    }
+   ///////////////////////////////////////////////////////////////////////////////////////////////////
+    function free_result($query_id) {
+         if ($this->typeConn=='mysql') 
+		     return mysql_free_result($query_id);
+		 else  if ($this->typeConn=='mssql') 
+			 return mssql_free_result($query_id);
+		else  if ($this->typeConn=='pgsql')
+			 return pg_free_result($query_id);                      // new add postgre query
+
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+	   function fetch_assoc($query_id) {
+         if ($this->typeConn=='mysql') 
+		     return mysql_fetch_assoc($query_id);
+		 else  if ($this->typeConn=='mssql') 
+			 return mssql_fetch_assoc($query_id);
+		 else  if ($this->typeConn=='pgsql')
+			 return pg_fetch_assoc($query_id);            // new add postgre query
+
+    }
+
+   /* function affected_rows() {
+        return mysql_affected_rows($this->conn_id);
+    }*/
+
+    function close_db() {
+    if ($this->typeConn=='mysql') {
+		if($this->conn_id) {
+            return mysql_close($this->conn_id);
+        } else {
+            return false;
+        }
+	}else  if ($this->typeConn=='mssql') {
+		 if($this->conn_id) {
+            return mssql_close($this->conn_id);
+        } else {
+            return false;
+        }
+	}else  if ($this->typeConn=='pgsql') {            // new add postgre query
+		 if($this->conn_id) {
+            return pg_close($this->conn_id);
+        } else {
+            return false;
+        }
+	}
+ }
+   ////////////////////////////////////////////////////////////////////////////////////////////////
+    function sql_error($message) {
+        if ($this->typeConn=='mysql') { 
+        $description = mysql_error();
+        $number = mysql_errno();
+		}else if ($this->typeConn=='mssql') {
+			 //$description = msql_error();
+            // $number = sql_errno(); 
+		}else if ($this->typeConn=='pgsql') {
+        $description = pg_result_error();     // new add postgre query ??? rigth??
+       // $number = pg_result_error_field();
+        }
+        $error ="MySQL Error : $message\n";
+		$error ="Sql is :".$this->sql."\n";
+		$error.="zero        :zero\n";
+       // $error.="Error Number: $number $description\n";
+       $error.="Error        : $description\n";
+        $error.="Date        : ".date("D, F j, Y H:i:s")."\n";
+        $error.="IP          : ".getenv("REMOTE_ADDR")."\n";
+        $error.="Browser     : ".getenv("HTTP_USER_AGENT")."\n";
+        $error.="Referer     : ".getenv("HTTP_REFERER")."\n";
+        $error.="PHP Version : ".PHP_VERSION."\n";
+        $error.="OS          : ".PHP_OS."\n";
+        $error.="Server      : ".getenv("SERVER_SOFTWARE")."\n";
+        $error.="Server Name : ".getenv("SERVER_NAME")."\n";
+        $error.="Script Name : ".getenv("SCRIPT_NAME")."\n";
+        echo "<b><font size=4 face=Arial>$message</font></b><hr>";
+        echo "<pre>$error</pre>";
+        exit();
+    }
+    /////////////////////////////////////////////////////////////////////////////////////////
+    function update_data2($tb_name1,$tb_name2,$fields,$funcs,$str_pk) {
+
+reset($fields); //เป็นฟังชั่น ที่ใช้ชี้ไปยัง element ตัวแรก เช่น array("ตัวแรก","ตัวที่สอง");
+if (!empty($funcs))
+	 reset ($funcs);//เป็นฟังชั่น ที่ใช้ชี้ไปยัง element ตัวแรก เช่น array("ตัวแรก","ตัวที่สอง");
+
+if($str_pk!="") // Update data maode
+{
+    $str_pk = stripslashes($str_pk); //function stripslashes(); เป็นฟังชั่น ในการตัด slash "/"
+    $valuelist = '';
+    while(list($key, $val) = each($fields))
+    {
+        switch (strtolower($val)) 
+        {
+	        case null:
+	        $val ='null'; 
+		        break;
+	        case '$set$':
+		        $f = "field_$key";
+		        $val = "'".($$f?implode(',',$$f):'')."'";   //เชื่อมข้อมูลด้วย ","(comma)  ex. aaa,bbb
+		        break;
+	        default:
+                $val = "'$val'";
+		        break;
+	    }
+       $valuelist .= "$key = $val, ";
+       if (!empty($funcs)){
+		   if(!empty($funcs[$key]))
+               $valuelist .= "$key = $funcs[$key]($val), ";
+	   }
+    }
+    $valuelist = ereg_replace(', $', '', $valuelist);
+   
+   // $query = "UPDATE $tb_name SET $valuelist  $str_pk";  //$str_pk=where
+       $query = "UPDATE $tb_name2 SET $valuelist $str_pk
+      ";
+  // echo $query; exit;
+ $this->query($query);
+    }
+} //end function update data2
+   /////////////////////////////////////////////////////////////////////////////////////////
+function update_data ($tb_name,$fields,$funcs,$str_pk) {
+//function update_data ($tb_name1,$tb_name2,$fields,$funcs,$str_pk) {
+reset($fields); //เป็นฟังชั่น ที่ใช้ชี้ไปยัง element ตัวแรก เช่น array("ตัวแรก","ตัวที่สอง");
+if (!empty($funcs))
+	 reset ($funcs);//เป็นฟังชั่น ที่ใช้ชี้ไปยัง element ตัวแรก เช่น array("ตัวแรก","ตัวที่สอง");
+
+if($str_pk!="") // Update data maode
+{
+    $str_pk = stripslashes($str_pk); //function stripslashes(); เป็นฟังชั่น ในการตัด slash "/"
+    $valuelist = '';
+    while(list($key, $val) = each($fields))
+    {
+        switch (strtolower($val)) 
+        {
+	        case null:
+	        $val ='null'; 
+		        break;
+	        case '$set$':
+		        $f = "field_$key";
+		        $val = "'".($$f?implode(',',$$f):'')."'";   //เชื่อมข้อมูลด้วย ","(comma)  ex. aaa,bbb
+		        break;
+	        default:
+                $val = "'$val'";
+		        break;
+	    }
+       $valuelist .= "$key = $val, ";
+       if (!empty($funcs)){
+		   if(!empty($funcs[$key]))
+               $valuelist .= "$key = $funcs[$key]($val), ";
+	   }
+    }
+    $valuelist = ereg_replace(', $', '', $valuelist);
+   
+    $query = "UPDATE $tb_name SET $valuelist  $str_pk";  //$str_pk=where
+      /* $query = "UPDATE $tb_name2 SET $valuelist  $str_pk
+FROM  $tb_name2 t2
+INNER JOIN $tb_name1 t1 ON t2.attach_id = t1.attach_id";  */
+}
+else // Add data mode
+{
+    $fieldlist = '';
+    $valuelist = '';
+    while(list($key, $val) = each($fields))
+    {
+        $fieldlist .= "$key, ";
+        switch (strtolower($val)) 
+        {
+	        case null:
+	           $val ='null';       //เพิ่มค่า null ให้ใหม่/ ''  ใช้งานได้แล้ว นี่คือ ถ้าค่าเป็น null อยากให้ใส่ null เข้าไปต้องใส่ '' ด้วย มันถึงจะเป็นค่าnull 
+		        break;
+	        case '$set$':
+		        $f = "field_$key";
+		        $val = "'".($$f?implode(',',$$f):'')."'";
+		        break;
+	        default:
+                $val = "'$val'";  // สงสัยตัวนี้ ที่ทำให้ ค่า null กลายเป็น empty string ''
+		        break;
+	        }
+        if(empty($funcs[$key]))
+            $valuelist .= "$val, ";
+        else
+            $valuelist .= "$funcs[$key]($val), ";
+    }
+    $fieldlist = ereg_replace(', $', '', $fieldlist);  //ใช้ตรวจสอบว่า มีข้อความตาม pattern ที่กำหนด ใน text หรือไม่
+    $valuelist = ereg_replace(', $', '', $valuelist);
+    $query = "INSERT INTO $tb_name($fieldlist) VALUES ($valuelist)";
+     //$query = "INSERT INTO $tb_name1($fieldlist) VALUES ($valuelist)";
+}   //echo  $query; exit; 
+   $this->query($query);
+}
+///////////////////////////////////////////////////////////////
+    function add_data ($tb_name,$fields,$funcs) 
+	{
+          $this->update_data($tb_name,$fields,$funcs,"");
+          // $this->update_data($tb_name,"",$fields,$funcs,"");
+    }
+/////////////////////////////////////////////////////////////
+	function del_data ($tb_name,$str_pk)
+	{
+		 if (empty($str_pk)) {
+			  print "Wraning \$str_pk is not empty in method del_data.... (you want to delete all please select function empty_tb )";
+         }else{
+			  $this->query("DELETE FROM ".$tb_name." ".$str_pk);
+		 }
+	}
+/////////////////////////////////////////////////////////////////////
+
+
+
+	function empty_tb ($tb_name) //Empty Table (all data lose)
+	{
+          $this->query("DELETE FROM ".$tb_name);
+	}
+	 function set_cfm_action () { //Java script source
+
+     $java_str= "<script language=\"javascript1.2\">";
+     $java_str.="        function cfm_action(value_send,goto_page,cfm_value,msg) {";
+     $java_str.="                     result = confirm(msg+\" \"+cfm_value+\" ?????????? ?\");";
+	 $java_str.="		             if (result == true) {";
+	 $java_str.="			                 self.location.href = goto_page+\"?\"+value_send;";
+	 $java_str.="		             }";
+	 $java_str.="	     } ";  
+     $java_str.="  </script>";
+     print ($java_str);
+     }
+
+	  function set_cfm_action_en () { //Java script source
+
+     $java_str= "<script language=\"javascript1.2\">";
+     $java_str.="        function cfm_action(value_send,goto_page,cfm_value,msg) {";
+     $java_str.="                     result = confirm(msg+\" \"+cfm_value+\" \");";
+	 $java_str.="		             if (result == true) {";
+	 $java_str.="			                 self.location.href = goto_page+\"?\"+value_send;";
+	 $java_str.="		             }";
+	 $java_str.="	     } ";  
+     $java_str.="  </script>";
+     print ($java_str);
+     }
+
+
+	 function find_max ($tb_name,$field_id) {
+       $result = $this->fetch_array ($this->query("select MAX($field_id) from $tb_name"));
+       $max_field = "MAX($field_id)";
+	   if (empty($result[$max_field]))
+              return "0";
+	   else
+             return $result[$max_field];
+   }
+    
+	function find_max_cond ($tb_name,$field_id,$field_cond,$value_cond) {
+       $result = $this->fetch_array ($this->query("select MAX($field_id) from $tb_name where $field_cond like '$value_cond' "));
+       $max_field = "MAX($field_id)";
+	   if (empty($result[$max_field]))
+              return "0";
+	   else
+             return $result[$max_field];
+   }
+
+   function find_max_cond2 ($tb_name,$field_id,$str_cond) {
+       $result = $this->fetch_array ($this->query("select MAX($field_id) from $tb_name $str_cond "));
+       $max_field = "MAX($field_id)";
+	   if (empty($result[$max_field]))
+              return "0";
+	   else
+             return $result[$max_field];
+   }
+
+   function get_field_type ($field_name,$tb_name)
+  {
+           $num_fields = $this->num_fields($this->query("select * from $tb_name"));
+		   for ($i =0;$i< $num_fields;$i++) 
+	      {
+			   if ($field_name == mysql_field_name($this->result,$i))
+		           return mysql_field_type($this->result,$i);
+	      }
+   }
+
+   function get_field_type_f_sql ($field_name,$sql)
+  {
+           $num_fields = $this->num_fields($this->query($sql));
+		   for ($i =0;$i< $num_fields;$i++) 
+	      {
+			   if ($field_name == mysql_field_name($this->result,$i))
+		           return mysql_field_type($this->result,$i);
+	      }
+   }
+  function get_data_rec ($sql_str)
+	{
+	    return $this->fetch_array($this->query ($sql_str));
+	}
+
+	function get_data_field ($sql_str,$field_name)
+	{
+	    $rec = $this->fetch_array($this->query ($sql_str));
+		return $rec[$field_name];
+	}
+
+  function num_rows_f_sql ($sql) {
+	  return $this->num_rows($this->query($sql));
+  }
+
+  function limit_sql($sql,$page_size,$page) {
+     $num_row=$this->num_rows_f_sql ($sql);
+		if ($page =="" || $page =="0" ) {
+		     $page=1;
+		}
+	$goto = ($page-1)*$page_size;	// ???????????????????
+    $sql_limit = $sql." limit $goto,$page_size";
+    $dbquery_limit = $this->query($sql_limit);
+	return $dbquery_limit;
+	}
+
+	function limit_sql_mssql($tbName,$fieldOrderby,$page_size,$page) {
+	  if ($page =="" || $page =="0" ) {
+		         $page=1;
+		    }
+	 $goto = ($page-1)*$page_size;	// ???????????????????
+
+	$sql_limit = "select top ".$page_size." * from ".$tbName." where ".$fieldOrderby." not in (select top ".$goto." ".$fieldOrderby." from ".$tbName." order by ".$fieldOrderby.") order by ".$fieldOrderby;
+    $dbquery_limit = $this->query($sql_limit);
+	return $dbquery_limit;
+	}
+
+	/*function limit_sql_mssql_cond($tbName,$cond,$fieldOrderby,$page_size,$page) {
+	  if ($page =="" || $page =="0" ) {
+		         $page=1;
+		    }
+	 $goto = ($page-1)*$page_size;	// ???????????????????
+
+	$sql_limit = "select top ".$page_size." * from ".$tbName." where ".$fieldOrderby." not in (select top ".$goto." ".$fieldOrderby." from ".$tbName." where ".$cond." order by ".$fieldOrderby.") and ".$cond." order by ".$fieldOrderby;
+    $dbquery_limit = $this->query($sql_limit);
+	return $dbquery_limit;
+	}*/
+	
+	function limit_sql_mssql_cond($tbName,$cond,$fieldOrderby,$page_size,$page) {
+	  if ($page =="" || $page =="0" ) {
+		         $page=1;
+		    }
+	 $goto = ($page-1)*$page_size;	// ???????????????????
+
+	$sql_limit = "select top ".$page_size." * from ".$tbName." where ".$fieldOrderby." not in (select top ".$goto." ".$fieldOrderby." from ".$tbName." where ".$cond." order by ".$fieldOrderby.") and ".$cond." order by ".$fieldOrderby;
+    $dbquery_limit = $this->query($sql_limit);
+	return $dbquery_limit;
+	}
+
+	function limit_sql_mssql_cond_order($tbName,$cond,$typeOrder,$fieldOrderby,$page_size,$page) {
+	  if ($page =="" || $page =="0" ) {
+		         $page=1;
+		    }
+	 $goto = ($page-1)*$page_size;	// ???????????????????
+
+	$sql_limit = "select top ".$page_size." * from ".$tbName." where ".$fieldOrderby." not in (select top ".$goto." ".$fieldOrderby." from ".$tbName." where ".$cond." order by ".$fieldOrderby." ".$typeOrder.") and ".$cond." order by ".$fieldOrderby." ".$typeOrder;
+    $dbquery_limit = $this->query($sql_limit);
+	return $dbquery_limit;
+	}
+	
+	function limit_sql_mssql_cond_order_join($tbName,$join,$cond,$typeOrder,$fieldOrderby,$page_size,$page) {
+	  if ($page =="" || $page =="0" ) {
+		         $page=1;
+		    }
+	 $goto = ($page-1)*$page_size;	// ???????????????????
+
+	$sql_limit = "select top ".$page_size." * from ".$tbName." ".$join." where ".$fieldOrderby." not in (select top ".$goto." ".$fieldOrderby." from ".$tbName." ".$join." where ".$cond." order by ".$typeOrder.") and ".$cond." order by ".$typeOrder;
+    $dbquery_limit = $this->query($sql_limit);
+	return $dbquery_limit;
+	}
+	function limit_sql_mssql_cond_order_join_fileds($tbName,$fileds,$join,$cond,$typeOrder,$fieldOrderby,$page_size,$page) {
+	  if ($page =="" || $page =="0" ) {
+		         $page=1;
+		    }
+	 $goto = ($page-1)*$page_size;	//calculatle page
+
+echo 	$sql_limit = "select top ".$page_size." ".$fileds." from ".$tbName." ".$join." where ".$fieldOrderby." not in (select top ".$goto." ".$fieldOrderby." from ".$tbName." ".$join." where ".$cond." order by ".$typeOrder.") and ".$cond." order by ".$typeOrder;
+    $dbquery_limit = $this->query($sql_limit);
+	return $dbquery_limit;
+	}
+
+	 function __destruct()
+	 {
+       $this->close_db();
+    }
+	
+}//end class
+
+?>

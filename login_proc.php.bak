@@ -1,0 +1,74 @@
+<? session_start();
+include "header.php";
+$tb_name="log_login";?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title><? echo $project_title;?></title>
+<link href="css/register.css" rel="stylesheet" type="text/css" /><? 
+//check input capt with session captcha
+
+
+define('TOP_SECRET','The Top Secret From Drr Developer By Prapad Nedpakdee'); 
+$sql="select * from personnel where username_per='$_POST[username_per]' and status_personnel='0' ";
+$result=$db->query($sql);
+$num = $db->num_rows($result); 
+$rs=$db->fetch_array($result);
+$id_personnel=$rs['id_personnel'];
+$username_per=$rs['username_per'];  
+$password_per=$rs['password_per'];
+$name_personnel=$rs['name_personnel'];  
+$type_personnel=$rs['type_personnel'];
+                                                  // ถ้ารหัสไม่ตรงกันทั้งสอง
+
+//var_dump($username_per,$password_per,md5($_POST['password_per'].TOP_SECRET));  //ตรวจสอบ ตัวแปร และค่าของตัวแปร
+
+	if ($num==0||md5($_POST['password_per'].TOP_SECRET) != $password_per){ ?> <!--เอาค่าจาก text มาบวกกับ top_secret เพื่อตรวจสอบว่าตรงกันใหมกับค่าในฐานข้อมูล(ค่าในฐานข้อมูลถูก บวกtopsecret ไว้ตอนสมัคร)-->
+		<script>
+		alert('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');history.back();
+					</script>
+			<?		exit;	}
+		/*	else if($_SESSION['captcha']!=$_POST['capt_admin'])
+    { 
+     //wrong captcha exit the program not continue.
+		echo "<script>alert('รหัสอักษรยืนยันไม่ถูกต้อง');	
+				window.location = 'login.php'</script>";
+				exit();
+	}*/
+			else{          // register แบบ รับค่าเลย **ไม่เคยเห็น
+							 $_SESSION['LOGID']=$id_personnel;
+							 $_SESSION['LOGUSER']=$username_per;
+							 $_SESSION['LOGPASS']=$password_per;  //เอามาจากฐานข้อมูลทั้งนั้น สำหรับตัวนี้ บวก topsecret ให้แล้ว
+							 $_SESSION['LOGNAME']=$name_personnel;
+							 $_SESSION['LOGTYPE']=$type_personnel; //กำหนด เมนู,  admind เท่านั้นเป็น 1
+	if (getenv(HTTP_X_FORWARDED_FOR)){
+
+ $ip=getenv(HTTP_X_FORWARDED_FOR);
+
+}else{$ip=getenv(REMOTE_ADDR); }      //get ip address
+
+                           //เก็บค่า log ของการ login เก็บ ip เวลา คนเข้า
+                       // insert data  โดยไม่ต้องใช้คำสั่ง sql ทำได้ไง *****แล้วฟังชั่น add_data มาจากไหน????
+							 $data['id_personnel']=$_SESSION['LOGID'];
+							 $data['date_time']=date("Y-m-d H:i:s");
+ 							 $data['ip_login']=$ip;
+							$add_data = $db->add_data($tb_name,$data,$funcs) ;
+						  if($_SESSION['LOGTYPE']!=5){?>
+						  
+						<script language="JavaScript">
+								alert('ยินดีต้อนรับเข้าสู่ระบบ');
+							  window.location.href = 'manage.php' ;
+						  </script> 
+						<? }else if($_SESSION['LOGTYPE']==5){?>
+						<script language="JavaScript">
+								alert('ยินดีต้อนรับเข้าสู่ระบบ');
+							  window.location.href = 'main.php' ; //หน้านี้สำหรับ คนทั่วไป (คือ 5) เข้าไปดูรายงานได้อย่างเดียว
+						  </script> 
+						
+					<? }	
+		$db->close_db();	}
+			
+?>
+</body>
+</html>
