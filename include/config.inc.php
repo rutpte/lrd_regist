@@ -12,18 +12,18 @@ $DB["pass"]   = "pgpteadmin";  */
 $DB["host"]   = "172.23.0.36";
 $DB["dbName"] = "drr_cld_db";             #<<#####################################################
 $DB["user"]   = "postgres";
-$DB["pass"]   = "pgCLDadmin1234";
+$DB["pass"]   = "--";
                                       */
  /////////////////////////////////////  -->ของโปรแกรมเมอร์เก่าที่ทำโปรเจ็คนี้
-//$DB["host"]   = "sql202.php0h.com";
-//$DB["dbName"] = "p0_2279560_dictionary";
-//$DB["user"]   = "p0_2279560";
-//$DB["pass"]   = "vpjkme";
+//$DB["host"]   = "--";
+//$DB["dbName"] = "--";
+//$DB["user"]   = "--";
+//$DB["pass"]   = "--";
 
 //for depoid
  // winti
 $DB["host"]   = "172.16.9.222";
-$DB["dbName"] = "drr_cld_db_yyy";
+$DB["dbName"] = "--";
 $DB["user"]   = "postgres";
 $DB["pass"]   = "pgpteadmin";
 
@@ -34,10 +34,10 @@ $DB["pass"]   = "pgpteadmin";
             $FTP["user_pass"] = "cld";
             $FTP["domain_data"] = "127.0.0.1";
                #
-           /*   $FTP["server"] = "172.23.0.37";         #
-            $FTP["user_name"] = "cldadmin";         #
-            $FTP["user_pass"] = "ftpCLDadmin1234";
-            $FTP["domain_data"] = "cld.drr.go.th";  */
+           /*   $FTP["server"] = "--";         #
+            $FTP["user_name"] = "--";         #
+            $FTP["user_pass"] = "--";
+            $FTP["domain_data"] = "--";  */
    //***********************************************#
 #-------------------------------------------------------------------------------------
 	$SELF = $HTTP_SERVER_VARS['PHP_SELF'];
